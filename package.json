@@ -1,0 +1,14 @@
+{
+  "name": "dgo_testCafe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "testcafe chrome test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "testcafe": "1.19.0"
+  }
+}
