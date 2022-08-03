@@ -1,4 +1,12 @@
 {
     "userBirthDay": "18 December 2001",
-    "keepnumberRegexp": "/[^0-9,-]+/g"
+    "themes": [
+        "Anime",
+        "Horror",
+        "Mystery & Detective",
+        "Open World",
+        "Sci-Fi & Cyberpunk",
+        "Space",
+        "Survival"
+    ]
 }

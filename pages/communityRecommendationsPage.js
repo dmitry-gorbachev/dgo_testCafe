@@ -1,11 +1,9 @@
 import { Selector, t, ClientFunction } from "testcafe";
 import BasePage from "./basePage";
-import testData from '../testData.json';
 
 export default class CommunityRecommendationsPage extends BasePage {
     constructor() {
         super();
-        this.pageHeaderSelector = Selector('.pageheader');
         this.filtersAndOptionsButtonSelector = Selector('.advanced_controls_toggle_ctn');
         this.filtersAndOptionsSection = Selector('.show_advanced_controls');
         this.customPlaytimeRangeRadiobuttonSelector = Selector('#review_playtime_preset_custom');
@@ -15,12 +13,8 @@ export default class CommunityRecommendationsPage extends BasePage {
         this.reviewerPlaytimeSelector = Selector('.reviewed_app .hours');
     }
 
-    async getPageHeader() {
-        return (await this.pageHeaderSelector.textContent).trim();
-    }
-
     async expandFiltersAndOptions() {
-        if (!(await this.filtersAndOptionsSection.exists)) {
+        if (!(await this.isFiltersSectionDisplayed())) {
             await t.click(this.filtersAndOptionsButtonSelector);
         }
     }
@@ -47,7 +41,7 @@ export default class CommunityRecommendationsPage extends BasePage {
         max = max == 'unlimited' ? 100 : max;
         let currentValues = await this.getSlidersValues();
         if (currentValues.max == 0 || currentValues.max < min) {
-            if (currentValues.min == currentValues.min && currentValues.min != 0) {
+            if (currentValues.min == currentValues.max && currentValues.min != 0) {
                 await this.dragSlider(this.playtimeSliderMinSelector, -1);
             }
             await this.dragSlider(this.playtimeSliderMaxSelector, max);
@@ -60,16 +54,31 @@ export default class CommunityRecommendationsPage extends BasePage {
     }
 
     async getSliderValue(slider) {
-        return parseInt((await slider.getAttribute('style')).replace(/[^0-9.]+/g, ""), 10); //I don't know why, but putting the regexp to testData breaks replacement here. I tried it.
+        return parseInt((await slider.getAttribute('style')).replace(this.keepNumRegex, ""), 10);
     }
 
     async dragSlider(slider, expectedValue) {
         let currentValue = await this.getSliderValue(slider);
         let shift;
         while (currentValue != expectedValue) {
-            shift = Math.ceil((expectedValue - currentValue) * 2.7667 + 1);
+            shift = Math.ceil((expectedValue - currentValue) * (await this.getSliderShiftWidth()));
             await t.drag(slider, shift, 0);
             currentValue = await this.getSliderValue(slider);
+        }
+    }
+
+    async getSliderShiftWidth() {
+        let currentValues = await this.getSlidersValues();
+        if (currentValues.min != currentValues.max) {
+            let rightSliderX = await this.playtimeSliderMaxSelector.getBoundingClientRectProperty("left");
+            let leftSliderX = await this.playtimeSliderMinSelector.getBoundingClientRectProperty("left");
+            //amount of pixels / amount of positions between sliders
+            return (rightSliderX - leftSliderX) / (currentValues.max - currentValues.min);
+        } else {
+            let sliderBarRightSideX = await this.sliderBarSelector.getBoundingClientRectProperty("right");
+            let sliderBarLeftSideX = await this.sliderBarSelector.getBoundingClientRectProperty("left");
+            //amount of pixels / 100 positions on the bar
+            return (sliderBarRightSideX - sliderBarLeftSideX) / 100;
         }
     }
 
@@ -77,7 +86,8 @@ export default class CommunityRecommendationsPage extends BasePage {
         const reviewsCount = await this.reviewerPlaytimeSelector.count;
         const playtimes = [];
         for (let i = 0; i < reviewsCount; i++) {
-            playtimes.push(parseFloat((await this.reviewerPlaytimeSelector.nth(i).textContent).replace(/[^0-9.]+/g, ""))); //I don't know why, but putting the regexp to testData breaks replacement here. I tried it.
+            playtimes.push(parseFloat((await this.reviewerPlaytimeSelector.nth(i).textContent)
+                .replace(this.keepNumRegex, "")));
         }
         const playTimeMin = Math.min(...playtimes);
         const playTimeMax = Math.max(...playtimes);
