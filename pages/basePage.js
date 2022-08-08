@@ -6,6 +6,7 @@ export default class BasePage {
     constructor() {
         this.pageHeaderSelector = Selector('.pageheader');
         this.pageTitleSelector = Selector('title');
+        this.themeLinkSelector = Selector('[data-genre-group="themes"] a');
         this.mainNavPanelRootSelector = (rootItem) =>
             Selector('.store_nav').find('a').withText(rootItem);
         this.mainNavPanelChildItemSelector = (childItem) =>
@@ -34,8 +35,10 @@ export default class BasePage {
     }
 
     async openRandomTheme() {
-        const randomTheme = testData.themes[getRandom(testData.themes.length)];
-        await this.mainNavigation('Categories', randomTheme);
-        return randomTheme;
+        await t.hover(this.mainNavPanelRootSelector('Categories'));
+        const randomIndex = getRandom(await this.themeLinkSelector.count);
+        const themeTitle = await this.themeLinkSelector.nth(randomIndex).textContent;
+        await t.click(this.themeLinkSelector.nth(randomIndex));
+        return themeTitle;
     }
 }

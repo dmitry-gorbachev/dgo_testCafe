@@ -21,7 +21,7 @@ export default class GamesListPage extends BasePage {
         await t.expect(Selector(this.gameFinalPrice).exists).ok();
     }
 
-    async getCheapestGame() {
+    async getCheapestGameIndex() {
         const countPaidGames = await this.gameFinalPrice.count;
         const prices = [];
         for (let i = 0; i < countPaidGames; i++) {
@@ -32,12 +32,11 @@ export default class GamesListPage extends BasePage {
             }
         }
         prices.sort(function (a, b) { return a.finalPriceNum - b.finalPriceNum });
-        return await this.getGameData(prices[0].i);
+        return prices[0].i;
     }
 
     async getGameData(index) {
         const gameData = {};
-        gameData.index = index;
         gameData.title = (await this.gameFinalPrice.nth(index)
             .parent(this.tabContentGameItemSelector).find(this.gameTitleSelector).textContent).trim();
         const discountApplied = await this.gameFinalPrice.nth(index)
@@ -53,10 +52,11 @@ export default class GamesListPage extends BasePage {
     }
 
     async openCheapestGame() {
-        const cheapestGame = await this.getCheapestGame();
-        await t.click(this.gameFinalPrice.nth(cheapestGame.index)
+        const cheapestGameIndex = await this.getCheapestGameIndex();
+        const gameData = await this.getGameData(cheapestGameIndex);
+        await t.click(this.gameFinalPrice.nth(cheapestGameIndex)
             .parent(this.tabContentGameItemSelector).find(this.gameTitleSelector));
         await t.maximizeWindow();
-        return cheapestGame;
+        return gameData;
     }
 }

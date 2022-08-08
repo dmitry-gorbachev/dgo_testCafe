@@ -23,12 +23,11 @@ export default class MatureContentFilterPage extends BasePage {
     }
 
     returnDate(date) {
-        const d = new Date(date);
-        const month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const dateObject = new Date(date);
         return {
-            day: d.getDate().toString(),
-            month: month[d.getMonth()],
-            year: d.getFullYear().toString()
+            day: dateObject.getDate().toString(),
+            month: dateObject.toLocaleString('default', { month: 'long' }),
+            year: dateObject.getFullYear().toString()
         };
     }
 
